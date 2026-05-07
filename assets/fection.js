@@ -58,38 +58,6 @@
         console.log("Entropy Checksum:", internalMetrics.buffer);
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-    
-
-   
     const startupContent = `
 <div id="loader">
   <div class="loader-content">
