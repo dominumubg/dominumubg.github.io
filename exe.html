@@ -1,0 +1,215 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bloxcraft UBG - Games</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link id="favicon" rel="shortcut icon" type="image/png" href="/bloxcraft.png">
+  <link rel="stylesheet" href="/app-viewer/app-viewer-default.css">
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-W0KXN0103E"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-W0KXN0103E');
+  </script>
+
+  <script>
+    (function(w,d,s,l,i){
+      w[l]=w[l]||[];
+      w[l].push({'gtm.start': new Date().getTime(),event:'gtm.js'});
+      var f=d.getElementsByTagName(s)[0],
+          j=d.createElement(s),
+          dl=l!='dataLayer'?'&l='+l:'';
+      j.async=true;
+      j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
+      f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-NQM8XR48');
+  </script>
+</head>
+
+<body>
+  <div id="viewerBar">
+    <p id="viewerTitle">Loading...</p>
+    <div id="Btn-Group">
+      <a class="bloxy-blue-btn bloxy-btn" href="/games">Close</a>
+      <a class="bloxy-blue-btn bloxy-btn" id="closeViewer" href="https://google.com/">Google</a>
+      <a class="bloxy-blue-btn bloxy-btn" id="openNewTab">Play In New Tab</a>
+    </div>
+  </div>
+
+  <iframe
+    id="viewerFrame"
+    allowfullscreen
+  ></iframe>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+
+const viewId = params.get("view");
+
+const viewerFrame = document.getElementById("viewerFrame");
+const viewerTitle = document.getElementById("viewerTitle");
+const closeViewer = document.getElementById("closeViewer");
+const openNewTab = document.getElementById("openNewTab");
+
+const jsonUrl =
+  "https://cdn.jsdelivr.net/gh/sea-bean-unblocked/sde@main/zzz.json";
+
+function show404() {
+
+  const doc =
+    viewerFrame.contentDocument ||
+    viewerFrame.contentWindow.document;
+
+  doc.open();
+
+  doc.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body{
+          margin:0;
+          background:black;
+          color:white;
+          font-family:sans-serif;
+          display:flex;
+          justify-content:center;
+          align-items:center;
+          height:100vh;
+          font-size:24px;
+        }
+      </style>
+    </head>
+    <body>
+      404 Blocked Or Not Found
+    </body>
+    </html>
+  `);
+
+  doc.close();
+
+  viewerTitle.textContent = "";
+}
+
+async function loadGame() {
+
+  if (!viewId) {
+    show404();
+    return;
+  }
+
+  try {
+
+    viewerTitle.textContent = "Loading...";
+
+    const jsonRes = await fetch(jsonUrl);
+
+    if (!jsonRes.ok) {
+      throw new Error("Failed to fetch JSON");
+    }
+
+    const data = await jsonRes.json();
+
+    const entry =
+      data.find(e => String(e.id) === String(viewId));
+
+    if (!entry) {
+      throw new Error("Game not found");
+    }
+
+    viewerTitle.textContent =
+      entry.name || "Game";
+
+    let htmlUrl =
+      entry.html ||
+      entry.url ||
+      "";
+
+    if (htmlUrl.includes("{HTML_URL}")) {
+
+      htmlUrl = htmlUrl.replace(
+        "{HTML_URL}",
+        "https://cdn.jsdelivr.net/gh/sea-bean-unblocked/Singlemile@main/games"
+      );
+    }
+
+    const gameRes = await fetch(htmlUrl);
+
+    if (!gameRes.ok) {
+      throw new Error("Failed to fetch game HTML");
+    }
+
+    const html = await gameRes.text();
+
+    viewerFrame.src = "about:blank";
+
+    await new Promise(resolve => {
+      viewerFrame.onload = resolve;
+    });
+
+    const doc =
+      viewerFrame.contentDocument ||
+      viewerFrame.contentWindow.document;
+
+    doc.open();
+    doc.write(html);
+    doc.close();
+
+    openNewTab.onclick = async (e) => {
+
+      e.preventDefault();
+
+      try {
+
+        const res = await fetch(htmlUrl);
+
+        if (!res.ok) {
+          throw new Error();
+        }
+
+        const html = await res.text();
+
+        const tab =
+          window.open("about:blank", "_blank");
+
+        if (!tab) {
+          alert("Popup blocked");
+          return;
+        }
+
+        tab.document.open();
+        tab.document.write(html);
+        tab.document.close();
+
+      } catch {
+
+        alert("Failed to open game");
+
+      }
+    };
+
+  } catch (err) {
+
+    console.error(err);
+
+    show404();
+
+  }
+}
+
+loadGame();
+
+closeViewer.addEventListener("click", () => {
+  window.location.href = "/games";
+});
+</script>
+
+<script src="/main-injection.js"></script>
+
+</body>
+</html>
