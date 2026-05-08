@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -61,19 +62,17 @@ const jsonUrl =
 
 function show404() {
 
-  const doc =
-    viewerFrame.contentDocument ||
-    viewerFrame.contentWindow.document;
+  try {
 
-  doc.open();
+    const doc =
+      viewerFrame.contentDocument ||
+      viewerFrame.contentWindow.document;
 
-  doc.write(`
-    <!DOCTYPE html>
-    <html>
-    <head>
+    doc.open();
+
+    doc.write(`
       <style>
         body{
-          margin:0;
           background:black;
           color:white;
           font-family:sans-serif;
@@ -82,16 +81,36 @@ function show404() {
           align-items:center;
           height:100vh;
           font-size:24px;
+          margin:0;
         }
       </style>
-    </head>
-    <body>
-      404 Blocked Or Not Found
-    </body>
-    </html>
-  `);
 
-  doc.close();
+      404 Blocked Or Not Found
+    `);
+
+    doc.close();
+
+  } catch {
+
+    viewerFrame.srcdoc = `
+      <style>
+        body{
+          background:black;
+          color:white;
+          font-family:sans-serif;
+          display:flex;
+          justify-content:center;
+          align-items:center;
+          height:100vh;
+          font-size:24px;
+          margin:0;
+        }
+      </style>
+
+      404 Blocked Or Not Found
+    `;
+
+  }
 
   viewerTitle.textContent = "";
 }
@@ -123,7 +142,7 @@ async function loadGame() {
     }
 
     viewerTitle.textContent =
-      entry.name || "Game";
+      entry.name || viewId;
 
     let htmlUrl =
       entry.html ||
@@ -141,24 +160,34 @@ async function loadGame() {
     const gameRes = await fetch(htmlUrl);
 
     if (!gameRes.ok) {
-      throw new Error("Failed to fetch game HTML");
+      throw new Error("Failed to fetch HTML");
     }
 
     const html = await gameRes.text();
 
     viewerFrame.src = "about:blank";
 
-    await new Promise(resolve => {
-      viewerFrame.onload = resolve;
-    });
+    setTimeout(() => {
 
-    const doc =
-      viewerFrame.contentDocument ||
-      viewerFrame.contentWindow.document;
+      try {
 
-    doc.open();
-    doc.write(html);
-    doc.close();
+        const doc =
+          viewerFrame.contentDocument ||
+          viewerFrame.contentWindow.document;
+
+        doc.open();
+        doc.write(html);
+        doc.close();
+
+      } catch (err) {
+
+        console.error(err);
+
+        show404();
+
+      }
+
+    }, 50);
 
     openNewTab.onclick = async (e) => {
 
@@ -174,17 +203,17 @@ async function loadGame() {
 
         const html = await res.text();
 
-        const tab =
+        const newTab =
           window.open("about:blank", "_blank");
 
-        if (!tab) {
+        if (!newTab) {
           alert("Popup blocked");
           return;
         }
 
-        tab.document.open();
-        tab.document.write(html);
-        tab.document.close();
+        newTab.document.open();
+        newTab.document.write(html);
+        newTab.document.close();
 
       } catch {
 
