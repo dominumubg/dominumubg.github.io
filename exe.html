@@ -62,55 +62,23 @@ const jsonUrl =
 
 function show404() {
 
-  try {
+  viewerFrame.srcdoc = `
+    <style>
+      body{
+        background:black;
+        color:white;
+        font-family:sans-serif;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        height:100vh;
+        font-size:24px;
+        margin:0;
+      }
+    </style>
 
-    const doc =
-      viewerFrame.contentDocument ||
-      viewerFrame.contentWindow.document;
-
-    doc.open();
-
-    doc.write(`
-      <style>
-        body{
-          background:black;
-          color:white;
-          font-family:sans-serif;
-          display:flex;
-          justify-content:center;
-          align-items:center;
-          height:100vh;
-          font-size:24px;
-          margin:0;
-        }
-      </style>
-
-      404 Blocked Or Not Found
-    `);
-
-    doc.close();
-
-  } catch {
-
-    viewerFrame.srcdoc = `
-      <style>
-        body{
-          background:black;
-          color:white;
-          font-family:sans-serif;
-          display:flex;
-          justify-content:center;
-          align-items:center;
-          height:100vh;
-          font-size:24px;
-          margin:0;
-        }
-      </style>
-
-      404 Blocked Or Not Found
-    `;
-
-  }
+    404 Blocked Or Not Found
+  `;
 
   viewerTitle.textContent = "";
 }
@@ -126,7 +94,9 @@ async function loadGame() {
 
     viewerTitle.textContent = "Loading...";
 
-    const jsonRes = await fetch(jsonUrl);
+    const jsonRes = await fetch(jsonUrl, {
+      cache: "no-store"
+    });
 
     if (!jsonRes.ok) {
       throw new Error("Failed to fetch JSON");
@@ -153,41 +123,33 @@ async function loadGame() {
 
       htmlUrl = htmlUrl.replace(
         "{HTML_URL}",
-        "https://cdn.jsdelivr.net/gh/sea-bean-unblocked/Singlemile@main/games"
+        "https://cdn.jsdelivr.net/gh/sea-bean-unblocked/Singlemile@main/games/"
       );
     }
 
-    const gameRes = await fetch(htmlUrl);
+
+    htmlUrl = htmlUrl.replace(/([^:]\/)\/+/g, "$1");
+
+    console.log("Loading game URL:", htmlUrl);
+
+    const gameRes = await fetch(htmlUrl, {
+      cache: "no-store"
+    });
 
     if (!gameRes.ok) {
+
+      console.error(
+        "Game fetch failed:",
+        gameRes.status,
+        htmlUrl
+      );
+
       throw new Error("Failed to fetch HTML");
     }
 
     const html = await gameRes.text();
 
-    viewerFrame.src = "about:blank";
-
-    setTimeout(() => {
-
-      try {
-
-        const doc =
-          viewerFrame.contentDocument ||
-          viewerFrame.contentWindow.document;
-
-        doc.open();
-        doc.write(html);
-        doc.close();
-
-      } catch (err) {
-
-        console.error(err);
-
-        show404();
-
-      }
-
-    }, 50);
+    viewerFrame.srcdoc = html;
 
     openNewTab.onclick = async (e) => {
 
@@ -195,7 +157,9 @@ async function loadGame() {
 
       try {
 
-        const res = await fetch(htmlUrl);
+        const res = await fetch(htmlUrl, {
+          cache: "no-store"
+        });
 
         if (!res.ok) {
           throw new Error();
@@ -215,7 +179,9 @@ async function loadGame() {
         newTab.document.write(html);
         newTab.document.close();
 
-      } catch {
+      } catch (err) {
+
+        console.error(err);
 
         alert("Failed to open game");
 
