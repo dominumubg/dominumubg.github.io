@@ -23,18 +23,18 @@
     }
 
     .hand-default {
-      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><g transform="translate(64, 64) scale(0.8)" fill="white" stroke="black" stroke-width="40" stroke-linejoin="round"><path d="M173.3 66.5C181.4 62.4 191.2 63.3 198.4 68.8L518.4 308.7C526.7 314.9 530 325.7 526.8 335.5C523.6 345.3 514.4 351.9 504 351.9L351.7 351.9L440.6 529.6C448.5 545.4 442.1 564.6 426.3 572.5C410.5 580.4 391.3 574 383.4 558.2L294.5 380.5L203.2 502.3C197 510.6 186.2 513.9 176.4 510.7C166.6 507.5 160 498.3 160 488L160 88C160 78.9 165.1 70.6 173.3 66.5z"/></g></svg>') no-repeat center/contain !important;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><g fill="white" stroke="black" stroke-width="40" stroke-linejoin="round"><path d="M173.3 66.5C181.4 62.4 191.2 63.3 198.4 68.8L518.4 308.7C526.7 314.9 530 325.7 526.8 335.5C523.6 345.3 514.4 351.9 504 351.9L351.7 351.9L440.6 529.6C448.5 545.4 442.1 564.6 426.3 572.5C410.5 580.4 391.3 574 383.4 558.2L294.5 380.5L203.2 502.3C197 510.6 186.2 513.9 176.4 510.7C166.6 507.5 160 498.3 160 488L160 88C160 78.9 165.1 70.6 173.3 66.5z"/></g></svg>') no-repeat center/contain !important;
       transform: scale(0.9) translate(-1px, 1px) !important;
     }
 
     .hand-click {
-      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><g transform="translate(64, 64) scale(0.8)" fill="%238A2BE2"><path d="M173.3 66.5C181.4 62.4 191.2 63.3 198.4 68.8L518.4 308.7C526.7 314.9 530 325.7 526.8 335.5C523.6 345.3 514.4 351.9 504 351.9L351.7 351.9L440.6 529.6C448.5 545.4 442.1 564.6 426.3 572.5C410.5 580.4 391.3 574 383.4 558.2L294.5 380.5L203.2 502.3C197 510.6 186.2 513.9 176.4 510.7C166.6 507.5 160 498.3 160 488L160 88C160 78.9 165.1 70.6 173.3 66.5z"/></g></svg>') no-repeat center/contain !important;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><g fill="white" stroke="black" stroke-width="40" stroke-linejoin="round"><path d="M173.3 66.5C181.4 62.4 191.2 63.3 198.4 68.8L518.4 308.7C526.7 314.9 530 325.7 526.8 335.5C523.6 345.3 514.4 351.9 504 351.9L351.7 351.9L440.6 529.6C448.5 545.4 442.1 564.6 426.3 572.5C410.5 580.4 391.3 574 383.4 558.2L294.5 380.5L203.2 502.3C197 510.6 186.2 513.9 176.4 510.7C166.6 507.5 160 498.3 160 488L160 88C160 78.9 165.1 70.6 173.3 66.5z"/></g></svg>') no-repeat center/contain !important;
       transform: scale(0.9) translate(-1px, 1px) !important;
       filter: drop-shadow(0px 0px 10px rgba(168, 85, 247, 0.8)) !important;
     }
 
     .hand-text {
-      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23a855f7" stroke="%23000000" stroke-width="1.2"><path d="M8 4h8M12 4v16M8 20h8"/></svg>') no-repeat center/contain !important;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://w3.org" viewBox="0 0 24 24"><path d="M8 4h8M12 4v16M8 20h8" fill="none" stroke="black" stroke-width="1.4" stroke-linecap="square"/><path d="M8 4h8M12 4v16M8 20h8" fill="none" stroke="white" stroke-width="1.3" stroke-linecap="square"/></svg>') no-repeat center/contain !important;
       width: 18px !important;
       height: 22px !important;
       filter: drop-shadow(0px 2px 6px rgba(0,0,0,0.9)) !important;
@@ -189,7 +189,59 @@
   let cursor, keyboardContainer, toastEl, controlsModal;
   let hasShownToast = false;
   let controlsOpen = false;
+  let kbdOpen = false;
   let isCursorVisible = false;
+  let lastActiveInput = null;
+
+  document.addEventListener('focusin', (e) => {
+    const el = e.target;
+    if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) {
+      lastActiveInput = el;
+    }
+  }, true);
+
+  function closeMenus() {
+    let closedAny = false;
+    if (controlsOpen) {
+      controlsOpen = false;
+      if (controlsModal) controlsModal.classList.remove('open');
+      closedAny = true;
+    }
+    if (kbdOpen) {
+      kbdOpen = false;
+      if (keyboardContainer) keyboardContainer.classList.remove('open');
+      closedAny = true;
+    }
+    return closedAny;
+  }
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' || e.keyCode === 27) {
+      closeMenus();
+    }
+  });
+
+  function captureScreenshot() {
+    const downloadImage = (canvas) => {
+      const a = document.createElement('a');
+      a.download = `screenshot-${Date.now()}.png`;
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    };
+
+    if (window.html2canvas) {
+      window.html2canvas(document.body).then(downloadImage);
+    } else {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+      script.onload = () => {
+        if (window.html2canvas) {
+          window.html2canvas(document.body).then(downloadImage);
+        }
+      };
+      document.head.appendChild(script);
+    }
+  }
 
   function initUI() {
     if (document.getElementById('xbox-hand-cursor')) return;
@@ -202,6 +254,8 @@
 
     keyboardContainer = document.createElement('div');
     keyboardContainer.id = 'xbox-gboard';
+    keyboardContainer.addEventListener('mousedown', (e) => e.preventDefault());
+    keyboardContainer.addEventListener('touchstart', (e) => e.preventDefault());
 
     toastEl = document.createElement('div');
     toastEl.id = 'xbox-toast';
@@ -216,10 +270,12 @@
       <div class="xbox-control-row"><span>Click / Select</span> <span class="xbox-key-tag">RT</span></div>
       <div class="xbox-control-row"><span>Right Click</span> <span class="xbox-key-tag">LT</span></div>
       <div class="xbox-control-row"><span>Scroll Page</span> <span class="xbox-key-tag">LB / RB</span></div>
-      <div class="xbox-control-row"><span>Toggle Keyboard</span> <span class="xbox-key-tag">Y Button</span></div>
+      <div class="xbox-control-row"><span>Open Keyboard</span> <span class="xbox-key-tag">Y Button</span></div>
       <div class="xbox-control-row"><span>Navigate Keyboard</span> <span class="xbox-key-tag">D-PAD</span></div>
-      <div class="xbox-control-row"><span>Type Key</span> <span class="xbox-key-tag">A Button</span></div>
+      <div class="xbox-control-row"><span>Type Key (Keyboard)</span> <span class="xbox-key-tag">A Button</span></div>
       <div class="xbox-control-row"><span>Toggle Fullscreen</span> <span class="xbox-key-tag">X Button</span></div>
+      <div class="xbox-control-row"><span>Take Screenshot</span> <span class="xbox-key-tag">View Button</span></div>
+      <div class="xbox-control-row"><span>Close Menus / ESC</span> <span class="xbox-key-tag">Menu Button</span></div>
       <div class="xbox-control-row"><span>Toggle Controls Menu</span> <span class="xbox-key-tag">B Button</span></div>
     `;
 
@@ -302,37 +358,67 @@
     }
   }
 
+  function setNativeValue(element, value) {
+    const valueSetter = Object.getOwnPropertyDescriptor(element, 'value')?.set;
+    const prototype = Object.getPrototypeOf(element);
+    const prototypeValueSetter = Object.getOwnPropertyDescriptor(prototype, 'value')?.set;
+
+    if (prototypeValueSetter && valueSetter !== prototypeValueSetter) {
+      prototypeValueSetter.call(element, value);
+    } else if (valueSetter) {
+      valueSetter.call(element, value);
+    } else {
+      element.value = value;
+    }
+  }
+
   function handleTypeAction(targetDoc, key) {
-    const active = targetDoc.activeElement || targetDoc.querySelector('input:focus, textarea:focus, [contenteditable]:focus');
+    let active = targetDoc.activeElement;
+
+    if (!active || (active.tagName !== 'INPUT' && active.tagName !== 'TEXTAREA' && !active.isContentEditable)) {
+      if (lastActiveInput && targetDoc.contains(lastActiveInput)) {
+        active = lastActiveInput;
+        active.focus();
+      } else {
+        active = targetDoc.querySelector('input:focus, textarea:focus, [contenteditable]:focus');
+      }
+    }
+
     if (!active) return;
 
     if (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA') {
-      const start = active.selectionStart || active.value.length;
-      const end = active.selectionEnd || active.value.length;
+      const start = active.selectionStart ?? active.value.length;
+      const end = active.selectionEnd ?? active.value.length;
+      let val = active.value;
 
       if (key === '⌫') {
         if (start === end && start > 0) {
-          active.value = active.value.slice(0, start - 1) + active.value.slice(end);
+          val = val.slice(0, start - 1) + val.slice(end);
+          setNativeValue(active, val);
           active.setSelectionRange(start - 1, start - 1);
-        } else {
-          active.value = active.value.slice(0, start) + active.value.slice(end);
+        } else if (start !== end) {
+          val = val.slice(0, start) + val.slice(end);
+          setNativeValue(active, val);
           active.setSelectionRange(start, start);
         }
       } else if (key === 'Space') {
-        active.value = active.value.slice(0, start) + ' ' + active.value.slice(end);
+        val = val.slice(0, start) + ' ' + val.slice(end);
+        setNativeValue(active, val);
         active.setSelectionRange(start + 1, start + 1);
       } else if (key === '↵') {
         active.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, code: 'Enter', bubbles: true }));
         active.dispatchEvent(new KeyboardEvent('keypress', { key: 'Enter', keyCode: 13, code: 'Enter', bubbles: true }));
         active.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', keyCode: 13, code: 'Enter', bubbles: true }));
       } else if (key.length === 1) {
-        active.value = active.value.slice(0, start) + key + active.value.slice(end);
+        val = val.slice(0, start) + key + val.slice(end);
+        setNativeValue(active, val);
         active.setSelectionRange(start + 1, start + 1);
       }
 
       active.dispatchEvent(new Event('input', { bubbles: true }));
       active.dispatchEvent(new Event('change', { bubbles: true }));
     } else if (active.isContentEditable) {
+      active.focus();
       if (key === '⌫') {
         targetDoc.execCommand('delete', false, null);
       } else if (key === 'Space') {
@@ -348,6 +434,14 @@
   const iframeReceiverScript = `
     (function receiverInit() {
       let cachedFrameRect = null;
+      let localLastActive = null;
+
+      document.addEventListener('focusin', (e) => {
+        const el = e.target;
+        if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) {
+          localLastActive = el;
+        }
+      }, true);
 
       function updateRect() {
         if (window.frameElement) {
@@ -372,37 +466,66 @@
         }
       }
 
+      function setNativeValue(element, value) {
+        const valueSetter = Object.getOwnPropertyDescriptor(element, 'value')?.set;
+        const prototype = Object.getPrototypeOf(element);
+        const prototypeValueSetter = Object.getOwnPropertyDescriptor(prototype, 'value')?.set;
+
+        if (prototypeValueSetter && valueSetter !== prototypeValueSetter) {
+          prototypeValueSetter.call(element, value);
+        } else if (valueSetter) {
+          valueSetter.call(element, value);
+        } else {
+          element.value = value;
+        }
+      }
+
       function handleTypeAction(targetDoc, key) {
-        const active = targetDoc.activeElement || targetDoc.querySelector('input:focus, textarea:focus, [contenteditable]:focus');
+        let active = targetDoc.activeElement;
+        if (!active || (active.tagName !== 'INPUT' && active.tagName !== 'TEXTAREA' && !active.isContentEditable)) {
+          if (localLastActive && targetDoc.contains(localLastActive)) {
+            active = localLastActive;
+            active.focus();
+          } else {
+            active = targetDoc.querySelector('input:focus, textarea:focus, [contenteditable]:focus');
+          }
+        }
+
         if (!active) return;
 
         if (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA') {
-          const start = active.selectionStart || active.value.length;
-          const end = active.selectionEnd || active.value.length;
+          const start = active.selectionStart ?? active.value.length;
+          const end = active.selectionEnd ?? active.value.length;
+          let val = active.value;
 
           if (key === '⌫') {
             if (start === end && start > 0) {
-              active.value = active.value.slice(0, start - 1) + active.value.slice(end);
+              val = val.slice(0, start - 1) + val.slice(end);
+              setNativeValue(active, val);
               active.setSelectionRange(start - 1, start - 1);
-            } else {
-              active.value = active.value.slice(0, start) + active.value.slice(end);
+            } else if (start !== end) {
+              val = val.slice(0, start) + val.slice(end);
+              setNativeValue(active, val);
               active.setSelectionRange(start, start);
             }
           } else if (key === 'Space') {
-            active.value = active.value.slice(0, start) + ' ' + active.value.slice(end);
+            val = val.slice(0, start) + ' ' + val.slice(end);
+            setNativeValue(active, val);
             active.setSelectionRange(start + 1, start + 1);
           } else if (key === '↵') {
             active.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, code: 'Enter', bubbles: true }));
             active.dispatchEvent(new KeyboardEvent('keypress', { key: 'Enter', keyCode: 13, code: 'Enter', bubbles: true }));
             active.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', keyCode: 13, code: 'Enter', bubbles: true }));
           } else if (key.length === 1) {
-            active.value = active.value.slice(0, start) + key + active.value.slice(end);
+            val = val.slice(0, start) + key + val.slice(end);
+            setNativeValue(active, val);
             active.setSelectionRange(start + 1, start + 1);
           }
 
           active.dispatchEvent(new Event('input', { bubbles: true }));
           active.dispatchEvent(new Event('change', { bubbles: true }));
         } else if (active.isContentEditable) {
+          active.focus();
           if (key === '⌫') {
             targetDoc.execCommand('delete', false, null);
           } else if (key === 'Space') {
@@ -523,7 +646,6 @@
   let posY = window.innerHeight / 2;
   const cursorSpeed = 8;
   const buttonStates = {};
-  let kbdOpen = false;
 
   let clickTimer = null;
   const clickSpeedMs = 10;
@@ -728,6 +850,13 @@
         if (keyboardContainer) keyboardContainer.classList.toggle('open', kbdOpen);
       }
 
+      if (justPressed('btn_9', isPressed(9, gp))) {
+        const closed = closeMenus();
+        if (!closed) {
+          broadcast('ESC');
+        }
+      }
+
       if (kbdOpen) {
         handleDpadKeyboard(gp);
       } else {
@@ -762,7 +891,9 @@
           }
         }
 
-        if (justPressed('btn_9', isPressed(9, gp))) broadcast('ESC');
+        if (justPressed('btn_8', isPressed(8, gp))) {
+          captureScreenshot();
+        }
       }
     }
 
