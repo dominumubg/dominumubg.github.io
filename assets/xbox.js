@@ -40,7 +40,7 @@
       filter: drop-shadow(0px 2px 6px rgba(0,0,0,0.9)) !important;
     }
 
-    #xbox-toast {
+   #xbox-toast {
       position: fixed !important;
       top: -100px !important;
       left: 50% !important;
@@ -52,7 +52,7 @@
       border-radius: 12px !important;
       border: 1px solid rgba(168, 85, 247, 0.35) !important;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 20px rgba(168, 85, 247, 0.25) !important;
-      z-index: 2147483647 !important;
+      z-index: 2147483644 !important;
       font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif !important;
       font-size: 13.5px !important;
       font-weight: 600 !important;
@@ -62,7 +62,6 @@
       align-items: center !important;
       gap: 10px !important;
       letter-spacing: 0.3px !important;
-      text-align: center !important;
     }
     #xbox-toast.show {
       top: 24px !important;
@@ -89,7 +88,7 @@
       border-radius: 16px !important;
       padding: 22px !important;
       box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95), 0 0 30px rgba(168, 85, 247, 0.2) !important;
-      z-index: 2147483647 !important;
+      z-index: 2147483644 !important;
       font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif !important;
       color: #f3f4f6 !important;
       opacity: 0 !important;
@@ -153,7 +152,7 @@
       transition: all 0.2s ease !important;
       text-align: center !important;
     }
-    .dpad-option-btn:hover, .dpad-option-btn.active {
+    .dpad-option-btn:hover, .dpad-option-btn.active, .dpad-option-btn.xbox-hover {
       background: linear-gradient(135deg, #a855f7, #6b21a8) !important;
       box-shadow: 0 0 15px rgba(168, 85, 247, 0.4) !important;
       border-color: #e9d5ff !important;
@@ -172,7 +171,7 @@
       border-bottom: none !important;
       padding: 16px !important;
       box-shadow: 0 -15px 50px rgba(0, 0, 0, 0.9), 0 0 25px rgba(168, 85, 247, 0.15) !important;
-      z-index: 2147483646 !important;
+      z-index: 2147483643 !important;
       transition: bottom 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
       font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif !important;
       user-select: none !important;
@@ -206,7 +205,7 @@
 
     .gboard-key.wide { flex: 1.5 !important; background: #221a38 !important; }
     .gboard-key.space { flex: 4 !important; }
-    .gboard-key.active {
+    .gboard-key.active, .gboard-key.xbox-hover {
       background: linear-gradient(135deg, #a855f7, #6b21a8) !important;
       color: #ffffff !important;
       box-shadow: 0 0 18px rgba(168, 85, 247, 0.7) !important;
@@ -344,6 +343,10 @@
       <div class="xbox-control-row"><span>Close Menus / ESC</span> <span class="xbox-key-tag">Menu Button</span></div>
       <div class="xbox-control-row"><span>Toggle Controls Menu</span> <span class="xbox-key-tag">B Button</span></div>
       <div class="xbox-control-row"><span>WASD/Arrow Keys (If Enabled)</span> <span class="xbox-key-tag">D-PAD</span></div>
+      <div class="xbox-control-row"><span>Escape/Close Menu</span> <span class="xbox-key-tag">Menu Button</span></div>
+      <div class="xbox-control-row"><span>Screenshot</span> <span class="xbox-key-tag">View button</span></div>
+      <div class="xbox-control-row"><span>Scrool Faster/Slower</span> <span class="xbox-key-tag">Joystick Buttons</span></div>
+      <div class="xbox-control-row"><span>Show Xbox Curser</span> <span class="xbox-key-tag">Share Button</span></div>
     `;
 
     dpadModal = document.createElement('div');
@@ -359,17 +362,17 @@
 
     const dpadButtons = dpadModal.querySelectorAll('.dpad-option-btn');
     dpadButtons.forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        saveDpadMode(e.target.dataset.mode);
+      btn.addEventListener('click', () => {
+        saveDpadMode(btn.dataset.mode);
       });
     });
 
-    const targetBody = document.body || document.documentElement;
-    targetBody.appendChild(cursor);
+const targetBody = document.body || document.documentElement;
     targetBody.appendChild(keyboardContainer);
     targetBody.appendChild(toastEl);
     targetBody.appendChild(controlsModal);
     targetBody.appendChild(dpadModal);
+    targetBody.appendChild(cursor); 
 
     window.addEventListener('mousemove', () => {
       if (isCursorVisible && cursor) {
@@ -419,7 +422,25 @@
         if (key === 'Space') keyEl.classList.add('space');
         if (rIdx === kbdRow && cIdx === kbdCol) keyEl.classList.add('active');
 
-        keyEl.textContent = displayKey;
+       keyEl.textContent = displayKey;
+
+        keyEl.addEventListener('click', () => {
+          if (key === 'Shift') {
+            isShift = !isShift;
+          } else if (key === '123') {
+            isNumbers = true;
+            kbdRow = 0; kbdCol = 0;
+          } else if (key === 'ABC') {
+            isNumbers = false;
+            kbdRow = 0; kbdCol = 0;
+          } else {
+            let char = key;
+            if (isShift && char.length === 1) char = char.toUpperCase();
+            broadcast('TYPE', { key: char });
+          }
+          renderKeyboard();
+        });
+
         rowEl.appendChild(keyEl);
       });
       keyboardContainer.appendChild(rowEl);
@@ -834,6 +855,8 @@
     if (!cursor) return;
     let el = document.elementFromPoint(posX, posY);
 
+    document.querySelectorAll('.xbox-hover').forEach(node => node.classList.remove('xbox-hover'));
+
     if (el && el.tagName === 'IFRAME') {
       try {
         const rect = el.getBoundingClientRect();
@@ -843,6 +866,16 @@
     }
 
     if (!el) return;
+
+ const dpadBtn = el.closest('.dpad-option-btn');
+    if (dpadBtn) {
+      dpadBtn.classList.add('xbox-hover');
+    }
+
+    const kbdKey = el.closest('.gboard-key');
+    if (kbdKey) {
+      kbdKey.classList.add('xbox-hover');
+    }
 
     const isTextElement = el.tagName === 'INPUT' ||
                           el.tagName === 'TEXTAREA' ||
@@ -872,7 +905,9 @@
 
     if (up || down || left || right) renderKeyboard();
 
-    if (justPressed('k_select', isPressed(0, gp) || isPressed(7, gp))) {
+    let isHoveringKey = document.elementFromPoint(posX, posY)?.closest('.gboard-key');
+
+    if (!isHoveringKey && justPressed('k_select', isPressed(0, gp) || isPressed(7, gp))) {
       let char = currentLayout[kbdRow][kbdCol];
       if (char === 'Shift') {
         isShift = !isShift;
@@ -1004,14 +1039,28 @@
         }
       }
 
-      if (kbdOpen) {
+if (kbdOpen) {
         handleDpadKeyboard(gp);
+
+        if (justPressed('k_cursor_click', isPressed(0, gp) || isPressed(7, gp))) {
+          let currentTarget = document.elementFromPoint(posX, posY);
+          if (currentTarget && currentTarget.closest('.gboard-key')) {
+            simulateFastClick(currentTarget.closest('.gboard-key'), posX, posY, 0);
+          }
+        }
       } else {
         if (!dpadModalOpen) {
           handleDpadGameplay(gp);
         }
 
-        if (justPressed('btn_0', isPressed(0, gp))) snapToNearestObject();
+        if (justPressed('btn_0', isPressed(0, gp))) {
+          let currentTarget = document.elementFromPoint(posX, posY);
+          if (currentTarget && currentTarget.closest('.dpad-option-btn')) {
+            simulateFastClick(currentTarget.closest('.dpad-option-btn'), posX, posY, 0);
+          } else {
+            snapToNearestObject();
+          }
+        }
 
         if (isPressed(7, gp)) {
           if (!clickTimer) {
@@ -1023,8 +1072,11 @@
         }
 
         if (justPressed('btn_6', isPressed(6, gp))) broadcast('RIGHT_CLICK');
-        if (isPressed(4, gp)) broadcast('SCROLL', { amount: -110 });
-        if (isPressed(5, gp)) broadcast('SCROLL', { amount: 110 });
+
+        const scrollAmount = isPressed(10, gp) ? 250 : isPressed(11, gp) ? 40 : 110;
+
+        if (isPressed(4, gp)) broadcast('SCROLL', { amount: -scrollAmount });
+        if (isPressed(5, gp)) broadcast('SCROLL', { amount: scrollAmount });
 
         if (justPressed('btn_2', isPressed(2, gp))) {
           if (!document.fullscreenElement) {
@@ -1035,6 +1087,15 @@
         }
 
         if (justPressed('btn_8', isPressed(8, gp))) captureScreenshot();
+
+        if (justPressed('btn_xbox', isPressed(16, gp))) {
+          window.top.location.href = '/Xbox Hub/';
+        }
+
+          if (justPressed('btn_share', isPressed(17, gp))) {
+          isCursorVisible = !isCursorVisible;
+          if (cursor) cursor.classList.toggle('visible', isCursorVisible);
+        }
       }
     }
 
